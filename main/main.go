@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"rpc"
@@ -9,8 +8,24 @@ import (
 	"time"
 )
 
+type Foo int
+
+type Args struct {
+	Num1, Num2 int
+}
+
+func (f Foo) Sum(args Args, reply *int) error {
+	*reply = args.Num1 + args.Num2
+	return nil
+}
+
 func startServer(addr chan string) {
 	// pick a free port
+	var foo Foo
+	if err := rpc.Register(&foo); err != nil {
+		log.Fatal("register error", err)
+	}
+
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
 		log.Fatal("network error:", err)
@@ -33,12 +48,11 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			args := fmt.Sprintf("rpc req %d", i)
-			var reply string
+			args := &Args{Num1: i, Num2: i * i}
+			var reply int
 			if err := client.Call("Foo.Sum", args, &reply); err != nil {
-				log.Fatal("cal Foo.Sum error:", err)
+				log.Printf("%d + %d = %d", args.Num1, args.Num2, reply)
 			}
-			log.Println("reply:", reply)
 		}(i)
 	}
 	wg.Wait()
