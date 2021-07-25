@@ -20,6 +20,7 @@ func (m *methodType) NumCalls() uint64 {
 
 func (m *methodType) newArgv() reflect.Value {
 	var argv reflect.Value
+	// arg may be a pointer type, or a value type
 	if m.ArgType.Kind() == reflect.Ptr {
 		argv = reflect.New(m.ArgType.Elem())
 	} else {
@@ -83,10 +84,6 @@ func (s *service) registerMethods() {
 	}
 }
 
-func isExportedOrBuiltinType(t reflect.Type) bool {
-	return ast.IsExported(t.Name()) || t.PkgPath() == ""
-}
-
 func (s *service) call(m *methodType, argv, replyv reflect.Value) error {
 	atomic.AddUint64(&m.numCalls, 1)
 	f := m.method.Func
@@ -95,4 +92,8 @@ func (s *service) call(m *methodType, argv, replyv reflect.Value) error {
 		return errInter.(error)
 	}
 	return nil
+}
+
+func isExportedOrBuiltinType(t reflect.Type) bool {
+	return ast.IsExported(t.Name()) || t.PkgPath() == ""
 }

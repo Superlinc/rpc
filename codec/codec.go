@@ -1,10 +1,12 @@
 package codec
 
-import "io"
+import (
+	"io"
+)
 
 type Header struct {
-	ServiceMethod string
-	Seq           uint64
+	ServiceMethod string // format "Service.Method"
+	Seq           uint64 // sequence number chosen by client
 	Error         string
 }
 
